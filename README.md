@@ -1,2 +1,8 @@
-# mas_project
+# MAS-Project
+
 Multi-Agent Systems (MAS)
+
+# Team
+
+- Nikethan
+- Luca
