@@ -1,3 +1,4 @@
+import asyncio
 import random
 from csv import DictWriter
 from datetime import datetime
@@ -340,3 +341,5 @@ def run_simulation(
         pygame.display.flip()
         clock.tick(FPS)
         total_frames += 1
+
+        asyncio.sleep(0)
