@@ -115,6 +115,8 @@ def _set_global_parameters(
     FILE = Path(
         ROOT_DIR / f"metrics/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
     )
+    if not FILE.parent.exists():
+        FILE.parent.mkdir(parents=True, exist_ok=True)
 
     WIDTH = width
     HEIGHT = height
