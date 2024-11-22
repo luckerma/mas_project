@@ -1,7 +1,9 @@
 import random
 from csv import DictWriter
+from datetime import datetime
 from enum import Enum
 from logging import Logger
+from pathlib import Path
 from statistics import mean
 from typing import Dict, List
 
@@ -10,10 +12,12 @@ import pygame
 from colors import BLACK, BLUE, GREEN, LIGHT_GRAY, RED, WHITE
 
 logger = Logger(__name__)
+ROOT_DIR: Path = Path(__file__).parent
 
 ### Parameters ###
 
 FONT: pygame.font.Font
+FILE: Path
 
 # Screen dimensions
 WIDTH: int
@@ -105,9 +109,12 @@ def _set_global_parameters(
     user_probability: float,
     fps: int,
 ):
-    global FONT, WIDTH, HEIGHT, GRID_SIZE, CELL_HEIGHT, CELL_WIDTH, TOTAL_VEHICLES, BATTERY_DEPLETION_RATE, RECHARGE_TIME, MAX_USERS, USER_PROBABILITY, FPS
+    global FONT, FILE, WIDTH, HEIGHT, GRID_SIZE, CELL_HEIGHT, CELL_WIDTH, TOTAL_VEHICLES, BATTERY_DEPLETION_RATE, RECHARGE_TIME, MAX_USERS, USER_PROBABILITY, FPS
 
     FONT = pygame.font.Font(None, 32)
+    FILE = Path(
+        ROOT_DIR / f"metrics/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+    )
 
     WIDTH = width
     HEIGHT = height
@@ -149,9 +156,9 @@ def _calculate_metrics(
 
 
 def _write_metrics(metrics: Dict[str, float]):
-    with open("simulation_metrics.csv", "a", newline="") as file:
-        writer = DictWriter(file, fieldnames=metrics.keys())
-        if file.tell() == 0:
+    with open(FILE, "a", newline="") as f:
+        writer = DictWriter(f, fieldnames=metrics.keys())
+        if f.tell() == 0:
             writer.writeheader()
 
         writer.writerow(metrics)
