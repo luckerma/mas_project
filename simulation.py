@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 from logging import Logger
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import pygame
 
@@ -31,6 +31,7 @@ RECHARGE_TIME: int
 MAX_USERS: int
 USER_PROBABILITY: float
 FPS: int
+HIGH_DEMAND_ZONE: bool
 
 ### Entities ###
 
@@ -108,8 +109,9 @@ def _set_global_parameters(
     max_users: int,
     user_probability: float,
     fps: int,
+    high_demand_zone: bool,
 ):
-    global FONT, FILE, WIDTH, HEIGHT, GRID_SIZE, CELL_HEIGHT, CELL_WIDTH, TOTAL_VEHICLES, BATTERY_DEPLETION_RATE, RECHARGE_TIME, MAX_USERS, USER_PROBABILITY, FPS
+    global FONT, FILE, WIDTH, HEIGHT, GRID_SIZE, CELL_HEIGHT, CELL_WIDTH, TOTAL_VEHICLES, BATTERY_DEPLETION_RATE, RECHARGE_TIME, MAX_USERS, USER_PROBABILITY, FPS, HIGH_DEMAND_ZONE
 
     FONT = pygame.font.Font(None, 32)
     FILE = Path(
@@ -129,6 +131,7 @@ def _set_global_parameters(
     MAX_USERS = max_users
     USER_PROBABILITY = user_probability
     FPS = fps
+    HIGH_DEMAND_ZONE = high_demand_zone
 
 
 def _calculate_metrics(
@@ -183,6 +186,20 @@ def _render_stats(screen: pygame.Surface, metrics: Dict[str, float], total_frame
         screen.blit(stat_text, (stats_x, stats_y + line_spacing * i))
 
 
+def _initialize_high_demand_zone(grid_size: int) -> Tuple[int, int, int]:
+    zone_center_x = random.randint(0, grid_size - 1)
+    zone_center_y = random.randint(0, grid_size - 1)
+    zone_radius = max(1, grid_size // 4)
+
+    return zone_center_x, zone_center_y, zone_radius
+
+
+def _is_within_high_demand_zone(
+    x: int, y: int, center_x: int, center_y: int, radius: int
+) -> bool:
+    return (x - center_x) ** 2 + (y - center_y) ** 2 <= radius**2
+
+
 async def run_simulation(
     width: int,
     height: int,
@@ -193,6 +210,7 @@ async def run_simulation(
     max_users: int,
     user_probability: float,
     fps: int,
+    high_demand_zone: bool,
 ):
     _set_global_parameters(
         width,
@@ -204,6 +222,7 @@ async def run_simulation(
         max_users,
         user_probability,
         fps,
+        high_demand_zone,
     )
 
     # Init pygame
@@ -213,6 +232,13 @@ async def run_simulation(
     clock = pygame.time.Clock()
 
     game_screen_rect = pygame.Rect(10, 10, WIDTH - 20, HEIGHT - 20)
+
+    # High demand zone
+    high_demand_x, high_demand_y, high_demand_radius = None, None, None
+    if HIGH_DEMAND_ZONE:
+        high_demand_x, high_demand_y, high_demand_radius = _initialize_high_demand_zone(
+            GRID_SIZE
+        )
 
     # Init entities
     vehicles: List[Vehicle] = [
@@ -238,11 +264,19 @@ async def run_simulation(
                     running = False
 
         # Generate users
-        if len(users) < MAX_USERS and random.random() < USER_PROBABILITY:
-            user = User(
-                random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1)
+        if len(users) < MAX_USERS:
+            spawn_prob = USER_PROBABILITY
+            user_x, user_y = random.randint(0, GRID_SIZE - 1), random.randint(
+                0, GRID_SIZE - 1
             )
-            users.append(user)
+
+            if HIGH_DEMAND_ZONE and _is_within_high_demand_zone(
+                user_x, user_y, high_demand_x, high_demand_y, high_demand_radius
+            ):
+                spawn_prob *= 10
+
+            if random.random() < spawn_prob:
+                users.append(User(user_x, user_y))
 
         # Update vehicles
         for vehicle in vehicles:
@@ -321,6 +355,18 @@ async def run_simulation(
             )
             pygame.draw.line(
                 screen, LIGHT_GRAY, (i * CELL_WIDTH, 0), (i * CELL_WIDTH, HEIGHT)
+            )
+
+        if HIGH_DEMAND_ZONE:
+            pygame.draw.circle(
+                screen,
+                LIGHT_GRAY,
+                (
+                    high_demand_x * CELL_WIDTH + CELL_WIDTH // 2,
+                    high_demand_y * CELL_HEIGHT + CELL_HEIGHT // 2,
+                ),
+                high_demand_radius * CELL_WIDTH,
+                2,
             )
 
         # Calculate and write metrics
