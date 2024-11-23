@@ -200,6 +200,37 @@ def _is_within_high_demand_zone(
     return (x - center_x) ** 2 + (y - center_y) ** 2 <= radius**2
 
 
+def _draw_vehicle(screen: pygame.Surface, vehicle: Vehicle):
+    color = (
+        GREEN
+        if vehicle.state == State.AVAILABLE
+        else RED if vehicle.state == State.NEEDS_RECHARGING else BLUE
+    )
+    pygame.draw.rect(
+        screen,
+        color,
+        pygame.Rect(
+            vehicle.x * CELL_WIDTH,
+            vehicle.y * CELL_HEIGHT,
+            CELL_WIDTH,
+            CELL_HEIGHT,
+        ),
+    )
+    if vehicle.user:
+        pygame.draw.line(
+            screen,
+            BLACK,
+            (
+                vehicle.x * CELL_WIDTH + CELL_WIDTH // 2,
+                vehicle.y * CELL_HEIGHT + CELL_HEIGHT // 2,
+            ),
+            (
+                vehicle.user.goal_x * CELL_WIDTH + CELL_WIDTH // 2,
+                vehicle.user.goal_y * CELL_HEIGHT + CELL_HEIGHT // 2,
+            ),
+        )
+
+
 async def run_simulation(
     width: int,
     height: int,
@@ -273,30 +304,10 @@ async def run_simulation(
             if HIGH_DEMAND_ZONE and _is_within_high_demand_zone(
                 user_x, user_y, high_demand_x, high_demand_y, high_demand_radius
             ):
-                spawn_prob *= 10
+                spawn_prob *= 100
 
             if random.random() < spawn_prob:
                 users.append(User(user_x, user_y))
-
-        # Update vehicles
-        for vehicle in vehicles:
-            color = (
-                GREEN
-                if vehicle.state == State.AVAILABLE
-                else RED if vehicle.state == State.NEEDS_RECHARGING else BLUE
-            )
-            pygame.draw.rect(
-                screen,
-                color,
-                pygame.Rect(
-                    vehicle.x * CELL_WIDTH,
-                    vehicle.y * CELL_HEIGHT,
-                    CELL_WIDTH,
-                    CELL_HEIGHT,
-                ),
-            )
-
-            vehicle.update()
 
         # Update users
         users.sort(key=lambda user: user.wait_time, reverse=True)
@@ -347,6 +358,12 @@ async def run_simulation(
             )
 
             user.update()
+
+        # Update vehicles
+        for vehicle in vehicles:
+            _draw_vehicle(screen, vehicle)
+
+            vehicle.update()
 
         # Draw grid
         for i in range(GRID_SIZE):

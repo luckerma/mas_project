@@ -1,11 +1,15 @@
 import asyncio
 import sys
+from pathlib import Path
 from typing import Dict, Tuple
 
 import pygame
 
 from colors import BLACK, BLUE, GREEN, LIGHT_GRAY, WHITE
 from simulation import run_simulation
+
+ROOT: Path = Path(__file__).parent
+FAVICON_FILE: Path = ROOT / "favicon.png"
 
 FONT: pygame.font.Font
 
@@ -135,6 +139,7 @@ async def main():
     pygame.init()
     pygame.font.init()
     pygame.display.set_caption("Configuration Menu")
+    pygame.display.set_icon(pygame.image.load(str(FAVICON_FILE)))
     screen = pygame.display.set_mode((params["WIDTH"], params["HEIGHT"]))
     FONT = pygame.font.Font(None, 32)
 
