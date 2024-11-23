@@ -122,6 +122,7 @@ async def main():
     running = True
     selected_param = None
     while running:
+        await asyncio.sleep(0)
         sliders, start_button_rect = _draw_menu(screen, sliders)
         pygame.display.flip()
 
@@ -181,8 +182,6 @@ async def main():
                     sliders[selected_param][1],
                     sliders[selected_param][2],
                 )
-
-        await asyncio.sleep(0.01)
 
     pygame.quit()
     sys.exit()

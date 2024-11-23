@@ -5,7 +5,6 @@ from datetime import datetime
 from enum import Enum
 from logging import Logger
 from pathlib import Path
-from statistics import mean
 from typing import Dict, List
 
 import pygame
@@ -141,7 +140,9 @@ def _calculate_metrics(
     vehicles_depleted = sum(1 for v in vehicles if v.state == State.NEEDS_RECHARGING)
 
     user_wait_times = [u.wait_time for u in users if u.vehicle is None]
-    avg_wait_time = mean(user_wait_times) if user_wait_times else 0
+    avg_wait_time = (
+        sum(user_wait_times) / len(user_wait_times) if user_wait_times else 0
+    )
 
     utilization_percentage = (
         sum(1 for v in vehicles if v.state == State.IN_USE) / TOTAL_VEHICLES
@@ -224,6 +225,7 @@ async def run_simulation(
     total_frames: int = 0
     running = True
     while running:
+        await asyncio.sleep(0)
         screen.fill(WHITE)
 
         # Quit or return to menu
@@ -341,5 +343,3 @@ async def run_simulation(
         pygame.display.flip()
         clock.tick(FPS)
         total_frames += 1
-
-        asyncio.sleep(0)
