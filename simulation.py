@@ -113,7 +113,7 @@ def _set_global_parameters(
 ):
     global FONT, FILE, WIDTH, HEIGHT, GRID_SIZE, CELL_HEIGHT, CELL_WIDTH, TOTAL_VEHICLES, BATTERY_DEPLETION_RATE, RECHARGE_TIME, MAX_USERS, USER_PROBABILITY, FPS, HIGH_DEMAND_ZONE
 
-    FONT = pygame.font.Font(None, 32)
+    FONT = pygame.font.Font(None, int(width * 0.04))
     FILE = Path(
         ROOT_DIR / f"metrics/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
     )
@@ -171,12 +171,18 @@ def _write_metrics(metrics: Dict[str, float]):
         writer.writerow(metrics)
 
 
-def _render_stats(screen: pygame.Surface, metrics: Dict[str, float], total_frames: int):
-    stats_x = 10
-    stats_y = 0
-    line_spacing = 30
+def _render_stats_and_back(
+    screen: pygame.Surface, metrics: Dict[str, float]
+) -> pygame.Rect:
+    stats_x = int(WIDTH * 0.02)
+    stats_y = int(HEIGHT * 0.02)
 
-    # Render metrics
+    button_width = int(WIDTH * 0.25)
+    button_height = int(HEIGHT * 0.1)
+
+    line_spacing = int(HEIGHT * 0.05)
+
+    # Stats
     for i, (key, value) in enumerate(metrics.items()):
         stat_text = FONT.render(
             f"{key}: {value:.2f}" if isinstance(value, float) else f"{key}: {value}",
@@ -184,6 +190,28 @@ def _render_stats(screen: pygame.Surface, metrics: Dict[str, float], total_frame
             BLACK,
         )
         screen.blit(stat_text, (stats_x, stats_y + line_spacing * i))
+
+    # Back button
+    back_button_rect = pygame.Rect(
+        WIDTH // 2 - button_width // 2,
+        HEIGHT - button_height - line_spacing,
+        button_width,
+        button_height,
+    )
+
+    pygame.draw.rect(screen, BLUE, back_button_rect)
+    pygame.draw.rect(screen, BLACK, back_button_rect, 2)
+
+    back_button = FONT.render("Back", True, WHITE)
+    screen.blit(
+        back_button,
+        (
+            back_button_rect.x + button_width // 2 - back_button.get_width() // 2,
+            back_button_rect.y + button_height // 2 - back_button.get_height() // 2,
+        ),
+    )
+
+    return back_button_rect
 
 
 def _initialize_high_demand_zone(grid_size: int) -> Tuple[int, int, int]:
@@ -392,13 +420,7 @@ async def run_simulation(
 
         # Render stats and back button
         if game_screen_rect.collidepoint(pygame.mouse.get_pos()):
-            _render_stats(screen, metrics, total_frames)
-
-            back_button = FONT.render("Back", True, WHITE)
-            back_button_rect = pygame.Rect(WIDTH // 2 + 130, HEIGHT - 80, 200, 50)
-            pygame.draw.rect(screen, BLUE, back_button_rect)
-            pygame.draw.rect(screen, BLACK, back_button_rect, 2)
-            screen.blit(back_button, (back_button_rect.x + 70, back_button_rect.y + 15))
+            back_button_rect = _render_stats_and_back(screen, metrics)
 
         if total_frames % FPS == 0:
             logger.info(f"Frame: {total_frames}")

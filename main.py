@@ -59,7 +59,7 @@ def _draw_slider(
     y: int,
     min_val: float,
     max_val: float,
-    width: int = 400,
+    width: int,
 ) -> Tuple[pygame.Rect, pygame.Rect]:
     # Slider
     slider_rect = pygame.Rect(x, y, width, 10)
@@ -85,21 +85,35 @@ def _draw_menu(
 ) -> Tuple[Dict, pygame.Rect, pygame.Rect]:
     screen.fill(WHITE)
 
-    # Title
-    title = FONT.render("MAS - Project 3 (Nikethan & Luca)", True, BLACK)
-    screen.blit(title, (params["WIDTH"] // 2 - title.get_width() // 2, 20))
+    # Dynamic spacing
+    padding: int = int(params["WIDTH"] * 0.05)
+    spacing: int = int(params["HEIGHT"] * 0.08)
+    slider_width: int = int(params["WIDTH"] * 0.8)
 
     # Sliders
-    y_offset = 100
+    y_offset = int(padding * 1)
     for i, (param, (value, _, _)) in enumerate(sliders.items()):
         min_val, max_val = slider_ranges[param]
         rect, handle = _draw_slider(
-            screen, param, value, 50, y_offset + i * 60, min_val, max_val
+            screen,
+            param,
+            value,
+            int(params["WIDTH"] * 0.1),
+            y_offset + i * spacing,
+            min_val,
+            max_val,
+            slider_width,
         )
         sliders[param] = (value, rect, handle)
 
     # Checkbox
-    checkbox_rect = pygame.Rect(500, y_offset, 20, 20)
+    checkbox_size = int(params["WIDTH"] * 0.03)
+    checkbox_rect = pygame.Rect(
+        int(params["WIDTH"] * 0.1),
+        y_offset + len(sliders) * spacing,
+        checkbox_size,
+        checkbox_size,
+    )
     pygame.draw.rect(screen, LIGHT_GRAY, checkbox_rect)
     if params["HIGH_DEMAND_ZONE"]:
         pygame.draw.line(
@@ -122,13 +136,24 @@ def _draw_menu(
     screen.blit(checkbox_label, (checkbox_rect.right + 10, checkbox_rect.top))
 
     # Start button
-    start_button = FONT.render("Start", True, WHITE)
+    button_width = int(params["WIDTH"] * 0.25)
+    button_height = int(params["HEIGHT"] * 0.1)
     start_button_rect = pygame.Rect(
-        params["WIDTH"] // 2 + 130, params["HEIGHT"] - 80, 200, 50
+        params["WIDTH"] // 2 - button_width // 2,
+        params["HEIGHT"] - padding - button_height,
+        button_width,
+        button_height,
     )
     pygame.draw.rect(screen, BLUE, start_button_rect)
     pygame.draw.rect(screen, BLACK, start_button_rect, 2)
-    screen.blit(start_button, (start_button_rect.x + 70, start_button_rect.y + 15))
+    start_button = FONT.render("Start", True, WHITE)
+    screen.blit(
+        start_button,
+        (
+            start_button_rect.x + button_width // 2 - start_button.get_width() // 2,
+            start_button_rect.y + button_height // 2 - start_button.get_height() // 2,
+        ),
+    )
 
     return sliders, checkbox_rect, start_button_rect
 
@@ -141,7 +166,7 @@ async def main():
     pygame.display.set_caption("Configuration Menu")
     pygame.display.set_icon(pygame.image.load(str(FAVICON_FILE)))
     screen = pygame.display.set_mode((params["WIDTH"], params["HEIGHT"]))
-    FONT = pygame.font.Font(None, 32)
+    FONT = pygame.font.Font(None, int(params["WIDTH"] * 0.04))
 
     # Initialize sliders
     sliders: Dict[str, Tuple[float, pygame.Rect, pygame.Rect]] = {}
