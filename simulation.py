@@ -182,7 +182,7 @@ def _render_stats(screen: pygame.Surface, metrics: Dict[str, float], total_frame
         screen.blit(stat_text, (stats_x, stats_y + line_spacing * i))
 
 
-def run_simulation(
+async def run_simulation(
     width: int,
     height: int,
     grid_size: int,

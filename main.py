@@ -143,7 +143,7 @@ async def main():
                         params[param] = int(value) if param in integer_params else value
 
                     # Start simulation
-                    run_simulation(
+                    await run_simulation(
                         width=params["WIDTH"],
                         height=params["HEIGHT"],
                         grid_size=params["GRID_SIZE"],
