@@ -1,3 +1,4 @@
+import asyncio
 import random
 from csv import DictWriter
 from datetime import datetime
@@ -181,7 +182,7 @@ def _render_stats(screen: pygame.Surface, metrics: Dict[str, float], total_frame
         screen.blit(stat_text, (stats_x, stats_y + line_spacing * i))
 
 
-def run_simulation(
+async def run_simulation(
     width: int,
     height: int,
     grid_size: int,
@@ -340,3 +341,5 @@ def run_simulation(
         pygame.display.flip()
         clock.tick(FPS)
         total_frames += 1
+
+        asyncio.sleep(0)

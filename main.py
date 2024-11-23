@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from typing import Dict, Tuple
 
@@ -102,7 +103,7 @@ def _draw_menu(screen: pygame.Surface, sliders: Dict) -> Tuple[Dict, pygame.Rect
     return sliders, start_button_rect
 
 
-def main():
+async def main():
     global FONT
     # Pygame setup
     pygame.init()
@@ -142,7 +143,7 @@ def main():
                         params[param] = int(value) if param in integer_params else value
 
                     # Start simulation
-                    run_simulation(
+                    await run_simulation(
                         width=params["WIDTH"],
                         height=params["HEIGHT"],
                         grid_size=params["GRID_SIZE"],
@@ -181,9 +182,11 @@ def main():
                     sliders[selected_param][2],
                 )
 
+        await asyncio.sleep(0.01)
+
     pygame.quit()
     sys.exit()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
