@@ -25,6 +25,7 @@ params = {
     "USER_PROBABILITY": 0.2,
     "FPS": 30,
     "HIGH_DEMAND_ZONE": False,
+    "VEHICLE_INIT": "random",
 }
 
 slider_ranges = {
@@ -50,6 +51,13 @@ integer_params = {
     "FPS",
 }
 
+vehicle_init_options = [
+    "random",
+    "center",
+    "uniform",
+    "high_demand",
+]
+
 
 def _draw_slider(
     screen: pygame.Surface,
@@ -73,7 +81,9 @@ def _draw_slider(
 
     # Param and value
     label = FONT.render(
-        f"{param}: {int(value) if param in integer_params else value:.2f}", True, BLACK
+        f"{param.replace('_', ' ')}: {int(value) if param in integer_params else value:.2f}",
+        True,
+        BLACK,
     )
     screen.blit(label, (x, y - 30))
 
@@ -82,7 +92,7 @@ def _draw_slider(
 
 def _draw_menu(
     screen: pygame.Surface, sliders: Dict
-) -> Tuple[Dict, pygame.Rect, pygame.Rect]:
+) -> Tuple[Dict, pygame.Rect, pygame.Rect, pygame.Rect]:
     screen.fill(WHITE)
 
     # Dynamic spacing
@@ -91,7 +101,6 @@ def _draw_menu(
     slider_width: int = int(params["WIDTH"] * 0.8)
 
     # Sliders
-    y_offset = int(padding * 1)
     for i, (param, (value, _, _)) in enumerate(sliders.items()):
         min_val, max_val = slider_ranges[param]
         rect, handle = _draw_slider(
@@ -99,18 +108,19 @@ def _draw_menu(
             param,
             value,
             int(params["WIDTH"] * 0.1),
-            y_offset + i * spacing,
+            padding + i * spacing,
             min_val,
             max_val,
             slider_width,
         )
         sliders[param] = (value, rect, handle)
 
-    # Checkbox
+    # Checkbox (High Demand Zone)
     checkbox_size = int(params["WIDTH"] * 0.03)
+    checkbox_y_offset = padding + len(sliders) * spacing
     checkbox_rect = pygame.Rect(
         int(params["WIDTH"] * 0.1),
-        y_offset + len(sliders) * spacing,
+        checkbox_y_offset,
         checkbox_size,
         checkbox_size,
     )
@@ -131,16 +141,35 @@ def _draw_menu(
             2,
         )
     pygame.draw.rect(screen, BLACK, checkbox_rect, 2)
-
-    checkbox_label = FONT.render("High Demand Zone", True, BLACK)
+    checkbox_label = FONT.render("HIGH DEMAND ZONE", True, BLACK)
     screen.blit(checkbox_label, (checkbox_rect.right + 10, checkbox_rect.top))
+
+    # Dropdown (Vehicle Init)
+    dropdown_width = int(params["WIDTH"] * 0.4)
+    dropdown_height = int(params["HEIGHT"] * 0.05)
+    dropdown_rect = pygame.Rect(
+        int(params["WIDTH"] * 0.5),
+        checkbox_y_offset,
+        dropdown_width,
+        dropdown_height,
+    )
+    pygame.draw.rect(screen, LIGHT_GRAY, dropdown_rect)
+    pygame.draw.rect(screen, BLACK, dropdown_rect, 2)
+    dropdown_label = FONT.render(f"VEHICLE INIT: {params['VEHICLE_INIT']}", True, BLACK)
+    screen.blit(
+        dropdown_label,
+        (
+            dropdown_rect.x + (dropdown_width - dropdown_label.get_width()) // 2,
+            dropdown_rect.y + (dropdown_height - dropdown_label.get_height()) // 2,
+        ),
+    )
 
     # Start button
     button_width = int(params["WIDTH"] * 0.25)
     button_height = int(params["HEIGHT"] * 0.1)
     start_button_rect = pygame.Rect(
         params["WIDTH"] // 2 - button_width // 2,
-        params["HEIGHT"] - padding - button_height,
+        params["HEIGHT"] - padding // 2 - button_height,
         button_width,
         button_height,
     )
@@ -155,7 +184,7 @@ def _draw_menu(
         ),
     )
 
-    return sliders, checkbox_rect, start_button_rect
+    return sliders, checkbox_rect, dropdown_rect, start_button_rect
 
 
 async def main():
@@ -177,12 +206,18 @@ async def main():
         min_val, max_val = slider_ranges[param]
         sliders[param] = (value, None, None)
 
+    dropdown_selected_index = vehicle_init_options.index(
+        params.get("VEHICLE_INIT", "random")
+    )
+
     # Main loop
     running = True
     selected_param = None
     while running:
         await asyncio.sleep(0)
-        sliders, checkbox_rect, start_button_rect = _draw_menu(screen, sliders)
+        sliders, checkbox_rect, dropdown_rect, start_button_rect = _draw_menu(
+            screen, sliders
+        )
         pygame.display.flip()
 
         for event in pygame.event.get():
@@ -191,7 +226,7 @@ async def main():
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 # Slider selection
-                for param, (value, slider_rect, handle_rect) in sliders.items():
+                for param, (value, _, handle_rect) in sliders.items():
                     if handle_rect.collidepoint(event.pos):
                         selected_param = param
                         break
@@ -200,8 +235,20 @@ async def main():
                 if checkbox_rect.collidepoint(event.pos):
                     params["HIGH_DEMAND_ZONE"] = not params["HIGH_DEMAND_ZONE"]
 
+                if dropdown_rect.collidepoint(event.pos):
+                    dropdown_selected_index = (dropdown_selected_index + 1) % len(
+                        vehicle_init_options
+                    )
+                    params["VEHICLE_INIT"] = vehicle_init_options[
+                        dropdown_selected_index
+                    ]
+
                 # Start button
                 if start_button_rect.collidepoint(event.pos):
+                    # Set high demand zone
+                    if params["VEHICLE_INIT"] == "high_demand":
+                        params["HIGH_DEMAND_ZONE"] = True
+
                     # Get slider values
                     for param, (value, _, _) in sliders.items():
                         params[param] = int(value) if param in integer_params else value
@@ -218,6 +265,7 @@ async def main():
                         user_probability=params["USER_PROBABILITY"],
                         fps=params["FPS"],
                         high_demand_zone=params["HIGH_DEMAND_ZONE"],
+                        vehicle_init=params["VEHICLE_INIT"],
                     )
 
                     pygame.display.set_caption("Configuration Menu")

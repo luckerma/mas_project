@@ -32,6 +32,7 @@ MAX_USERS: int
 USER_PROBABILITY: float
 FPS: int
 HIGH_DEMAND_ZONE: bool
+VEHICLE_INIT: str
 
 ### Entities ###
 
@@ -110,8 +111,9 @@ def _set_global_parameters(
     user_probability: float,
     fps: int,
     high_demand_zone: bool,
+    vehicle_init: str,
 ):
-    global FONT, FILE, WIDTH, HEIGHT, GRID_SIZE, CELL_HEIGHT, CELL_WIDTH, TOTAL_VEHICLES, BATTERY_DEPLETION_RATE, RECHARGE_TIME, MAX_USERS, USER_PROBABILITY, FPS, HIGH_DEMAND_ZONE
+    global FONT, FILE, WIDTH, HEIGHT, GRID_SIZE, CELL_HEIGHT, CELL_WIDTH, TOTAL_VEHICLES, BATTERY_DEPLETION_RATE, RECHARGE_TIME, MAX_USERS, USER_PROBABILITY, FPS, HIGH_DEMAND_ZONE, VEHICLE_INIT
 
     FONT = pygame.font.Font(None, int(width * 0.04))
     FILE = Path(
@@ -132,6 +134,7 @@ def _set_global_parameters(
     USER_PROBABILITY = user_probability
     FPS = fps
     HIGH_DEMAND_ZONE = high_demand_zone
+    VEHICLE_INIT = vehicle_init
 
 
 def _calculate_metrics(
@@ -228,6 +231,54 @@ def _is_within_high_demand_zone(
     return (x - center_x) ** 2 + (y - center_y) ** 2 <= radius**2
 
 
+def _initialize_vehicles(
+    init_strategy: str, high_demand_x, high_demand_y, high_demand_radius
+) -> List[Vehicle]:
+    if init_strategy == "center":
+        return [Vehicle(GRID_SIZE // 2, GRID_SIZE // 2) for _ in range(TOTAL_VEHICLES)]
+
+    elif init_strategy == "uniform":
+        step = max(1, GRID_SIZE // int(TOTAL_VEHICLES**0.5))
+        vehicles = [
+            Vehicle(x, y)
+            for x in range(0, GRID_SIZE, step)
+            for y in range(0, GRID_SIZE, step)
+        ]
+
+        # Ensure correct number of vehicles
+        while len(vehicles) < TOTAL_VEHICLES:
+            vehicles.append(
+                Vehicle(
+                    random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1)
+                )
+            )
+        return vehicles[:TOTAL_VEHICLES]
+
+    elif init_strategy == "high_demand" and HIGH_DEMAND_ZONE:
+        return [
+            Vehicle(
+                random.randint(
+                    max(0, high_demand_x - high_demand_radius),
+                    min(GRID_SIZE - 1, high_demand_x + high_demand_radius),
+                ),
+                random.randint(
+                    max(0, high_demand_y - high_demand_radius),
+                    min(GRID_SIZE - 1, high_demand_y + high_demand_radius),
+                ),
+            )
+            for _ in range(TOTAL_VEHICLES)
+        ]
+
+    elif init_strategy == "random":
+        return [
+            Vehicle(random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1))
+            for _ in range(TOTAL_VEHICLES)
+        ]
+
+    else:
+        raise ValueError(f"Unknown initialization strategy: {init_strategy}")
+
+
 def _draw_vehicle(screen: pygame.Surface, vehicle: Vehicle):
     color = (
         GREEN
@@ -270,7 +321,9 @@ async def run_simulation(
     user_probability: float,
     fps: int,
     high_demand_zone: bool,
+    vehicle_init: str,
 ):
+    global FONT, FILE, WIDTH, HEIGHT, GRID_SIZE, CELL_HEIGHT, CELL_WIDTH, TOTAL_VEHICLES, BATTERY_DEPLETION_RATE, RECHARGE_TIME, MAX_USERS, USER_PROBABILITY, FPS, HIGH_DEMAND_ZONE, VEHICLE_INIT
     _set_global_parameters(
         width,
         height,
@@ -282,6 +335,7 @@ async def run_simulation(
         user_probability,
         fps,
         high_demand_zone,
+        vehicle_init,
     )
 
     # Init pygame
@@ -300,10 +354,9 @@ async def run_simulation(
         )
 
     # Init entities
-    vehicles: List[Vehicle] = [
-        Vehicle(random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1))
-        for _ in range(TOTAL_VEHICLES)
-    ]
+    vehicles: List[Vehicle] = _initialize_vehicles(
+        VEHICLE_INIT, high_demand_x, high_demand_y, high_demand_radius
+    )
     users: List[User] = []
 
     # Run simulation
