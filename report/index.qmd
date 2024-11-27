@@ -4,7 +4,7 @@ authors:
   - name: "Luca Uckermann"
     affiliation:
       - id: THK
-        name: "Cologne University of Applied Sciences"
+        name: "University of Applied Sciences (TH Köln)"
         city: "Cologne"
         country: "Germany"
     corresponding: true
@@ -21,7 +21,3 @@ date: last-modified
 
 # Section
 This is a simple placeholder for the manuscript's main document [@knuth84].
-
-
-
-

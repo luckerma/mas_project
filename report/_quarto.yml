@@ -5,10 +5,8 @@ manuscript:
   article: index.qmd
 
 format:
-  html:
-    comments:
-      hypothesis: true
-  pdf: default
+  html: default
+  #pdf: default
 
 execute:
-  freeze: true
+  freeze: false
