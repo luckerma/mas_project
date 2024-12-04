@@ -8,6 +8,7 @@ authors:
         city: "Cologne"
         country: "Germany"
     corresponding: true
+    orcid: "0009-0005-2957-6331"
   - name: "Nikethan"
     affiliation:
       - id: UGE
@@ -17,7 +18,40 @@ authors:
     corresponding: true
 bibliography: references.bib
 date: last-modified
+
+abstract: |
+  Abstract
 ---
 
-# Section
-This is a simple placeholder for the manuscript's main document [@knuth84].
+# Introduction
+This report presents a Multi-Agent System (MAS) simulation designed to manage a fleet of shared micromobility vehicles (such as bicycles or scooters) in an urban environment. The simulation aims to model how vehicles are used, how they need to be charged or maintained, and to observe system behavior under different demand scenarios. The focus is on simulating agent interactions without complex optimization or real-time redistribution.
+
+# Objectives
+The objectives of the simulation are to:
+
+1. **Simulate Vehicle Usage:** Model the states and transitions of vehicles as they are used by users.
+2. **Agent-Based Modeling:** Implement users and vehicles as autonomous agents interacting in an environment.
+3. **Demand Scenarios:** Explore different user demand patterns, including random and high-demand zones.
+4. **Track Key Metrics:** Monitor vehicle availability, user wait times, and vehicle utilization.
+
+# Design
+
+## Architecture
+
+## Agents
+
+## Environment
+
+## Simulation
+
+## Metrics
+
+# Implementation
+
+## Code Structure
+
+## User Interface (UI)
+
+# Results
+
+# Conclusion
