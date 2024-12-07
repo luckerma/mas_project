@@ -2,6 +2,9 @@
 
 Multi-Agent Systems (MAS)
 
+The simulation is available at:\
+https://luckerma.github.io/mas_project/
+
 ## Team
 
 - Nikethan
@@ -42,8 +45,10 @@ pip install pygbag
 python -m pygbag --build main.py
 ```
 
-## Render and view report
+## Preview / Render Report (Quarto)
 
 ```bash
 quarto preview ./report/
+
+quarto render ./report/ --to pdf
 ```

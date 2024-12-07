@@ -328,6 +328,10 @@ def calculate_metrics(environment: Environment, frame: int) -> Dict[str, float]:
         * 100
     )
 
+    avg_wait_time = round(avg_wait_time, 2)
+    available_percentage = round(available_percentage, 2)
+    utilization_percentage = round(utilization_percentage, 2)
+
     return {
         "frame": frame,
         "users": len(users),
