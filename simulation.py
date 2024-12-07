@@ -325,7 +325,8 @@ def calculate_metrics(environment: Environment, frame: int) -> Dict[str, float]:
     utilization_percentage = (
         sum(1 for vehicle in vehicles if vehicle.state == State.IN_USE)
         / (len(vehicles) - vehicles_depleted)
-        * 100
+        if (len(vehicles) - vehicles_depleted) > 0
+        else 0
     )
 
     avg_wait_time = round(avg_wait_time, 2)
