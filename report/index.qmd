@@ -21,7 +21,7 @@ number-sections: true
 link-citations: true
 execute: 
   eval: true
-  echo: true
+  echo: false
   output: true
   warning: false
   error: false
@@ -124,8 +124,17 @@ The implementation is organized into separate Python modules to maintain clarity
 
 ## UI
 
-A UI built with Pygame [@pygame2024] provides an interactive menu to configure the parameters described in @sec-environment. Additionally the resolution of the simulation can be set and the simulation can be started and stopped from the UI. Once started, key metrics are displayed and the simulation runs indefinitely until stopped. Once stopped, the simulation can be reconfigured and restarted.
+A UI built with Pygame [@pygame2024] provides an interactive menu to configure the parameters described in @sec-environment. Additionally, the resolution of the simulation can be set and the simulation can be started and stopped from the UI. Once started, key metrics are displayed and the simulation runs indefinitely until stopped. Once stopped, the simulation can be reconfigured and restarted.
 
+
+![Menu](resources/menu.png){#fig-menu}
+
+@fig-menu displays the main menu of the simulation. The user can set parameters and start the simulation.
+
+
+![Simulation](resources/simulation.png){#fig-simulation}
+
+The @fig-simulation shows the simulation in action. Users are represented by black circles, vehicles by green (available), blue (in use), red squares (depleted) and the high-demand zone by the big grey circle.
 ## How to Run
 
 To run the simulation, first clone the repository and navigate to the project directory. Then create a new Conda environment and install the required dependencies:
@@ -184,7 +193,26 @@ Using the `github-pages-deploy-action` [@ives2024], the built web application is
 
 # Results
 
+The simulation results provide insight into the performance of shared micromobility systems under different scenarios. The following figures illustrate the average user wait time, vehicle availability, and vehicle utilization over time for four different vehicle initialization strategies: random, center, uniform, and high-demand. Each strategy was run three times and the results were aggregated to provide a more robust analysis. All other parameters were held constant across runs, as shown in @tbl-parameters:
+
+| Parameter               | Value                                 |
+|-------------------------|---------------------------------------|
+| Grid Size               | 12x12 Cells                           |
+| Total Vehicles          | 10                                    |
+| Battery Depletion Rate  | 20                                    |
+| Recharge Time           | 30                                    |
+| Max Users               | 10                                    |
+| User Probability        | 0.2                                   |
+| FPS                     | 30                                    |
+| High-Demand Zone        | True                                  |
+| Vehicle Initialization  | Random, Center, Uniform, High-Demand  |
+
+: Simulation parameters for the four vehicle initialization strategies. {#tbl-parameters}
+
+To simplify the visualization and to better highlight early system behavior, the data for the first 300 frames has been aggregated into a 10 second interval. The initial phase of the simulation is most relevant for understanding the impact of different vehicle initialization methods on system performance under initial conditions.
+
 ```{r}
+#| echo: false
 library(dplyr)
 library(ggplot2)
 library(purrr)
@@ -194,6 +222,7 @@ library(tidyr)
 files_random <- file.path("experiments", c("random_1.csv", "random_2.csv", "random_3.csv"))
 files_center <- file.path("experiments", c("center_1.csv", "center_2.csv", "center_3.csv"))
 files_uniform <- file.path("experiments", c("uniform_1.csv", "uniform_2.csv", "uniform_3.csv"))
+files_high_demand <- file.path("experiments", c("high-demand_1.csv", "high-demand_2.csv", "high-demand_3.csv"))
 
 combine_runs <- function(file_list, approach_name) {
     dfs <- lapply(file_list, read_csv)
@@ -217,8 +246,9 @@ combine_runs <- function(file_list, approach_name) {
 df_random <- combine_runs(files_random, "Random")
 df_center <- combine_runs(files_center, "Center")
 df_uniform <- combine_runs(files_uniform, "Uniform")
+df_high_demand <- combine_runs(files_high_demand, "High-Demand")
 
-df_all <- bind_rows(df_random, df_center, df_uniform)
+df_all <- bind_rows(df_random, df_center, df_uniform, df_high_demand)
 
 df_aggregated <- df_all |>
     mutate(second = floor(frame / 30)) |>
@@ -235,6 +265,8 @@ df_aggregated <- df_all |>
 ```
 
 ```{r}
+#| label: fig-average-user-wait-time
+#| fig-cap: "Average User Wait Time by Approach"
 ggplot(df_aggregated, aes(x = second, y = average_user_wait_time, color = approach)) +
     geom_line() +
     labs(
@@ -245,7 +277,15 @@ ggplot(df_aggregated, aes(x = second, y = average_user_wait_time, color = approa
     theme_minimal()
 ```
 
+@fig-average-user-wait-time shows the average user wait time over the course of the simulation. A lower wait time indicates better accessibility of vehicles for users:
+
+- **Center:** The center initialization strategy shows the highest average user wait time because vehicles are initially concentrated in the center and users must travel farther to reach them, especially when the high-demand zone is active and far from the center.
+- **High-Demand:** The high-demand initialization strategy has the lowest average user wait time because vehicles are concentrated in the High Demand zone, reducing the distance users must travel to find a vehicle.
+- **Random and Uniform:** The random and uniform initialization strategies show intermediate average user wait times, reflecting the more even distribution of vehicle availability across the network.
+
 ```{r}
+#| label: fig-vehicle-availability
+#| fig-cap: "Vehicle Availability by Approach"
 ggplot(df_aggregated, aes(x = second, y = vehicle_availability, color = approach)) +
     geom_line() +
     labs(
@@ -256,7 +296,15 @@ ggplot(df_aggregated, aes(x = second, y = vehicle_availability, color = approach
     theme_minimal()
 ```
 
+@fig-vehicle-availability shows the percentage of vehicles available for immediate use over time. Higher availability indicates better access to vehicles for users:
+
+- **Center:** Although the center initialization strategy has the highest average user wait time, it maintains the highest vehicle availability due to the initial concentration of vehicles in the center.
+- **High-Demand:** The high-demand initialization strategy has the lowest vehicle availability because the vehicles are concentrated in the high-demand zone and are used immediately by users, reducing the overall availability. However, the availability never drops below 50%, so there is no need to increase the number of vehicles.
+- **Random and Uniform:** The random and uniform initialization strategies show intermediate vehicle availability, reflecting the more evenly distributed vehicle availability throughout the network.
+
 ```{r}
+#| label: fig-vehicle-utilization
+#| fig-cap: "Vehicle Utilization by Approach"
 ggplot(df_aggregated, aes(x = second, y = vehicle_utilization, color = approach)) +
     geom_line() +
     labs(
@@ -266,6 +314,12 @@ ggplot(df_aggregated, aes(x = second, y = vehicle_utilization, color = approach)
     ) +
     theme_minimal()
 ```
+
+@fig-vehicle-utilization shows the percentage of vehicles in use over time, representing the operational efficiency of the system. Higher utilization indicates more efficient use of the fleet:
+
+- **Center:** The center initialization strategy shows the lowest vehicle utilization after initialization.
+- **High-Demand:** The high-demand initialization strategy shows the highest vehicle utilization as users find the vehicles directly in the high-demand zone.
+- **Random and Uniform:** The random and uniform initialization strategies again show intermediate vehicle utilization.
 
 # Conclusion
 
