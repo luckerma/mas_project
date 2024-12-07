@@ -45,10 +45,18 @@ pip install pygbag
 python -m pygbag --build main.py
 ```
 
-## Preview / Render Report (Quarto)
+## Preview Report (Quarto)
 
 ```bash
 quarto preview ./report/
+```
 
+## Render Report (Quarto)
+
+```bash
 quarto render ./report/ --to pdf
+
+cd report/
+quarto add dfolio/quarto-ieee
+quarto render . --to ieee-pdf
 ```
