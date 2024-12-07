@@ -1,5 +1,6 @@
 ---
-title: "MAS: Project 3 Report"
+title: "Multi-Agent System Simulation for Shared Micromobility"
+subtitle: "MAS Project Report"
 authors:
   - name: "Luca Uckermann"
     affiliation:
@@ -16,42 +17,267 @@ authors:
         city: "Paris"
         country: "France"
     corresponding: true
+number-sections: true
+link-citations: true
+execute: 
+  eval: true
+  echo: true
+  output: true
+  warning: false
+  error: false
+  include: true
 bibliography: references.bib
 date: last-modified
 
 abstract: |
-  Abstract
+  This report presents a multi-agent system simulation for managing a fleet of shared micromobility vehicles, such as bicycles and scooters, in an urban network environment. The focus is on modeling vehicle usage patterns, charging cycles and the impact of different user demand scenarios, ranging from random spatial distributions to concentrated high-demand zones, on system performance. Rather than using complex optimization techniques or real-time redistribution, the simulation emphasizes the emergent behavior of autonomous agents: vehicles transition through states based on availability, usage and battery levels as users search for, rent and return vehicles as they move through the city.
 ---
 
 # Introduction
-This report presents a Multi-Agent System (MAS) simulation designed to manage a fleet of shared micromobility vehicles (such as bicycles or scooters) in an urban environment. The simulation aims to model how vehicles are used, how they need to be charged or maintained, and to observe system behavior under different demand scenarios. The focus is on simulating agent interactions without complex optimization or real-time redistribution.
+This report presents a Multi-Agent System (MAS) simulation designed to manage a fleet of shared micromobility vehicles, such as bicycles and scooters, within a city network. The simulation serves as a tool to study how vehicles move through various operational states, including availability, usage and charging, while responding to user demands that may vary in space and time. Unlike systems that focus on complex optimization or real-time vehicle redistribution, this simulation emphasizes agent-based interactions and emergent behaviors resulting from simple rules and probabilistic demand patterns. The primary motivation is to gain insight into the dynamics of a MAS environment and the performance of shared micromobility systems under different scenarios.
 
 # Objectives
-The objectives of the simulation are to:
+The simulation has been developed with the following main objectives:
 
-1. **Simulate Vehicle Usage:** Model the states and transitions of vehicles as they are used by users.
-2. **Agent-Based Modeling:** Implement users and vehicles as autonomous agents interacting in an environment.
-3. **Demand Scenarios:** Explore different user demand patterns, including random and high-demand zones.
-4. **Track Key Metrics:** Monitor vehicle availability, user wait times, and vehicle utilization.
+1. **Simulate Vehicle Usage:** Represent the life cycle of each vehicle as an agent transitioning through states (e.g., available, rented, depleted) based on user interactions and battery levels.
+2. **Agent-Based Modeling:** Treat both users and vehicles as autonomous agents. Users search for and use vehicles, while vehicles respond to use by depleting and recharging their batteries.
+3. **Demand Scenarios:** Incorporate different usage scenarios, including random user appearances and the presence of high-demand zones.
+4. **Track Key Metrics:** Continuously monitor and record system-level metrics such as vehicle availability, user wait times and vehicle utilization, providing insight into performance and bottlenecks.
 
 # Design
 
 ## Architecture
 
+The simulation is structured around a grid-based urban environment, where each cell represents a potential location for users and vehicles. Key components include:
+
+- **Environment Layer:** A grid that provides spatial constraints and contextual information (e.g., high-demand zones).
+- **Agent Layer:** Two main types of agents users and vehicles interact on the grid.
+- **State Management:** Vehicles transition through defined states based on interactions with users and their battery levels, while users transition through a "journey" cycle, from spawn to goal completion.
+
+This layered architecture separates concerns, allowing modular adjustments to the number of agents, grid size and parameters such as battery depletion rate without fundamentally changing the logic of the simulation.
+
 ## Agents
 
-## Environment
+Two types of agents drive the simulation:
+
+### User Agents
+
+Users appear in the environment at random cells or according to probabilities influenced by the high-demand zones. Each user aims to travel from a start location to a goal location. If a vehicle is available nearby, the user tries to rent it. While waiting for a vehicle, user wait times accumulate. Users perform simple pathfinding to their goals and release the vehicle upon arrival.
+
+### Vehicle Agents
+
+Vehicles start in the `Available` state, ready to be picked up. Once a user has rented a vehicle, it enters the `In Use` state and travels with the user. During the trip, the battery is depleted at a rate defined by the depletion rate. When the battery is depleted, the vehicle enters the `Needs Recharging` state. After a recharge period, it becomes `Available` again. Vehicles do not move unless in use; instead, they remain stationary in their assigned cell when available or recharging.
+
+## Environment {#sec-environment}
+
+The environment has many configurable parameters, including
+
+- **Grid Size:** The size of the grid in cells.
+- **Total Vehicles:** The number of vehicles in the simulation.
+- **Battery Depletion Rate:** The rate at which the battery depletes per time step.
+- **Recharge Time:** The time it takes for a vehicle to recharge.
+- **Max Users:** The maximum number of users that can appear in the environment at the same time.
+- **User Probability:** The probability of a user spawning.
+- **FPS:** The frames per second for the simulation.
+- **High-Demand Zone:** A boolean flag to indicate the presence of high-demand zones.
+- **Vehicle Initialization:** The strategy for initializing vehicle locations (e.g., random, center, uniform, high-demand).
+
+It provides the basis for agent interactions and the emergence of system-level behaviors.
 
 ## Simulation
 
+In general, the entire simulation is kept simple to focus on the interactions between agents and the emergent behaviors that result from these interactions. The simulation loop consists of the following steps:
+
+1. **User Spawning:** Based on the defined probability parameters, new users may appear at random cells. If a high-demand zone is active, user appearance rates are amplified there. Each user receives a random start and goal location.
+2. **Vehicle Assignment:** Users attempt to locate an available vehicle within a close distance. If successful, the user rents the vehicle.
+3. **Agent Updates:** Users move towards their goals, no matter if they have a vehicle or not. Vehicles in use move alongside their users, depleting their battery. Depleted vehicles remain stationary and recharge.
+4. **State Transitions:** On reaching their destination, users release vehicles. If a battery is depleted, it needs recharging. After the recharge period, vehicles become available again.
+5. **Overlapping Agents:** Multiple agents can temporarily occupy the same cell and overlap without collision. This simplification avoids complex pathfinding and collision detection.
+
+Simplified simulation elements include:
+
+- **No Real-Time Movement:** All users move one cell per time step, whether they have a vehicle or not.
+- **(De)Spawning:** Users appear and disappear instantly, without animations or leaving the grid.
+- **No User Preferences:** Users do not have preferences for specific vehicles or locations, they only rent when a vehicle is nearby during their trip.
+
 ## Metrics
+
+Key metrics are tracked at every frame to track system performance:
+
+- **Vehicle Availability:** The percentage of vehicles currently available for direct rental.
+- **User Wait Times:** The average time users wait before successfully renting a vehicle.
+- **Vehicle Utilization:** The percentage of the non-depleted fleet that is currently being rented, indicating how effectively the resource is being utilized.
+
+Tracking these metrics provides quantitative insights into how well the system performs under varying conditions (e.g., high-demand, low vehicle availability).
 
 # Implementation
 
+Conda [@conda2024] is used to manage the Python environment and dependencies, based on version 3.11.9.
+
 ## Code Structure
 
-## User Interface (UI)
+The implementation is organized into separate Python modules to maintain clarity and modularity:
+
+- **colors.py:** Defines basic color constants for rendering.
+- **main.py:** Handles the User Interface (UI) for configuring the simulation parameters before starting.
+- **simulation.py:** Contains the logic for the MAS environment, agent classes (vehicles and users), state transitions and metric calculations. Logs metrics at each frame.
+
+## UI
+
+A UI built with Pygame [@pygame2024] provides an interactive menu to configure the parameters described in @sec-environment. Additionally the resolution of the simulation can be set and the simulation can be started and stopped from the UI. Once started, key metrics are displayed and the simulation runs indefinitely until stopped. Once stopped, the simulation can be reconfigured and restarted.
+
+## How to Run
+
+To run the simulation, first clone the repository and navigate to the project directory. Then create a new Conda environment and install the required dependencies:
+
+```bash
+conda create -n mas-project python=3.11
+conda activate mas-project
+
+pip install -r requirements.txt
+```
+
+To run the simulation, execute the following command:
+
+```bash
+python main.py
+```
+
+The simulation metrics are stored as CSV files in the `metrics/` directory per run and named with a timestamp. See `2024-12-07_02-12-58.csv` as an example:
+
+```csv
+frame,users,vehicles,average_user_wait_time,vehicle_availability,vehicles_depleted,vehicle_utilization
+0,1,10,1.0,100.0,0,0.0
+1,2,10,1.0,90.0,0,10.0
+2,3,10,1.33,90.0,0,10.0
+3,3,10,1.67,90.0,0,10.0
+4,4,10,1.75,80.0,0,20.0
+5,4,10,2.25,70.0,1,22.22
+6,4,10,2.75,70.0,1,22.22
+7,5,10,2.6,60.0,1,33.33
+8,5,10,1.4,50.0,2,37.5
+9,6,10,1.5,40.0,3,42.86
+10,5,10,2.0,40.0,3,42.86
+```
+
+## Deployment
+
+In addition to running the simulation locally, Pygbag [@pygbag2024] is used to package and deploy the simulation as a web application on GitHub Pages [@githubpages2024]. Using GitHub Actions [@githubactions2024], the simulation is automatically built and deployed to the `gh-pages` branch whenever changes are pushed to the `main` branch.
+
+A snippet of the GitHub Actions workflow file:
+
+```yaml
+- name: Python
+  run: |
+    python -m pip install -r requirements.txt
+    python -m pygbag --build $GITHUB_WORKSPACE/main.py
+
+- name: Deploy to GitHub Pages
+  uses: JamesIves/github-pages-deploy-action@v4
+  with:
+    token: ${{ secrets.PA_TOKEN }}
+    branch: gh-pages
+    folder: build/web
+```
+
+Using the `github-pages-deploy-action` [@ives2024], the built web application is deployed, making the simulation [accessible online](https://luckerma.github.io/mas_project/) for interactive exploration.
 
 # Results
 
+```{r}
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(readr)
+library(tidyr)
+
+files_random <- file.path("experiments", c("random_1.csv", "random_2.csv", "random_3.csv"))
+files_center <- file.path("experiments", c("center_1.csv", "center_2.csv", "center_3.csv"))
+files_uniform <- file.path("experiments", c("uniform_1.csv", "uniform_2.csv", "uniform_3.csv"))
+
+combine_runs <- function(file_list, approach_name) {
+    dfs <- lapply(file_list, read_csv)
+
+    combined <- bind_rows(dfs, .id = "run") |>
+        group_by(frame) |>
+        summarize(
+            users = mean(users),
+            vehicles = mean(vehicles),
+            average_user_wait_time = mean(average_user_wait_time),
+            vehicle_availability = mean(vehicle_availability),
+            vehicles_depleted = mean(vehicles_depleted),
+            vehicle_utilization = mean(vehicle_utilization),
+            .groups = "drop"
+        ) |>
+        mutate(approach = approach_name)
+
+    return(combined)
+}
+
+df_random <- combine_runs(files_random, "Random")
+df_center <- combine_runs(files_center, "Center")
+df_uniform <- combine_runs(files_uniform, "Uniform")
+
+df_all <- bind_rows(df_random, df_center, df_uniform)
+
+df_aggregated <- df_all |>
+    mutate(second = floor(frame / 30)) |>
+    group_by(second, approach) |>
+    summarize(
+        users = mean(users),
+        vehicles = mean(vehicles),
+        average_user_wait_time = mean(average_user_wait_time),
+        vehicle_availability = mean(vehicle_availability),
+        vehicles_depleted = mean(vehicles_depleted),
+        vehicle_utilization = mean(vehicle_utilization),
+        .groups = "drop"
+    )
+```
+
+```{r}
+ggplot(df_aggregated, aes(x = second, y = average_user_wait_time, color = approach)) +
+    geom_line() +
+    labs(
+        title = "Average User Wait Time by Approach",
+        x = "Second",
+        y = "Average User Wait Time"
+    ) +
+    theme_minimal()
+```
+
+```{r}
+ggplot(df_aggregated, aes(x = second, y = vehicle_availability, color = approach)) +
+    geom_line() +
+    labs(
+        title = "Vehicle Availability by Approach",
+        x = "Second",
+        y = "Vehicle Availability (%)"
+    ) +
+    theme_minimal()
+```
+
+```{r}
+ggplot(df_aggregated, aes(x = second, y = vehicle_utilization, color = approach)) +
+    geom_line() +
+    labs(
+        title = "Vehicle Utilization by Approach",
+        x = "Second",
+        y = "Vehicle Utilization (%)"
+    ) +
+    theme_minimal()
+```
+
 # Conclusion
+
+This MAS simulation provides a basic framework for exploring the dynamics of shared micromobility systems under various conditions. While it does not incorporate advanced optimization or adaptive redistribution strategies, it lays the groundwork for understanding basic interactions and identifying potential bottlenecks. The collected metrics provide insight into system performance and support future studies on optimization methods, agent decision improvement, or even the integration of predictive modeling for demand forecasting. In addition, an optimal vehicle distribution algorithm could be implemented to improve vehicle availability and user wait times.
+
+In summary, this project demonstrates the potential of MAS simulations for studying shared micromobility systems and highlights the importance of agent-based modeling in capturing emergent behaviors and system-level dynamics.
+
+# Acknowledgements
+
+The authors learned the basic concepts of MAS and the use of Pygame for simulations in the course "Multi-Agent Systems" at UGE. The authors would like to thank the course instructor for her guidance and support throughout the project.
+
+# References
+
+::: {#refs}
+:::
