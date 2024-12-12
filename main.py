@@ -37,7 +37,6 @@ class ConfigMenu:
             "TOTAL_VEHICLES": (1, 100),
             "BATTERY_DEPLETION_RATE": (1, 100),
             "RECHARGE_TIME": (10, 300),
-            "MAX_USERS": (1, 100),
             "USER_PROBABILITY": (0.1, 1.0),
             "FPS": (1, 60),
         }
@@ -49,7 +48,6 @@ class ConfigMenu:
             "TOTAL_VEHICLES",
             "BATTERY_DEPLETION_RATE",
             "RECHARGE_TIME",
-            "MAX_USERS",
             "FPS",
         }
 
