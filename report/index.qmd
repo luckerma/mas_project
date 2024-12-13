@@ -51,7 +51,7 @@ The simulation has been developed with the following main objectives:
 The simulation is structured around a grid-based urban environment, where each cell represents a potential location for users and vehicles. Key components include:
 
 - **Environment Layer:** A grid that provides spatial constraints and contextual information (e.g., high-demand zones).
-- **Agent Layer:** Two main types of agents users and vehicles interact on the grid.
+- **Agent Layer:** Two main types of agents **users** and **vehicles** interact on the grid.
 - **State Management:** Vehicles transition through defined states based on interactions with users and their battery levels, while users transition through a "journey" cycle, from spawn to goal completion.
 
 This layered architecture separates concerns, allowing modular adjustments to the number of agents, grid size and parameters such as battery depletion rate without fundamentally changing the logic of the simulation.
