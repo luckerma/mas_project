@@ -404,16 +404,36 @@ class Renderer:
             if vehicle.state == State.AVAILABLE
             else RED if vehicle.state == State.NEEDS_RECHARGING else BLUE
         )
-        pygame.draw.rect(
-            self.screen,
-            color,
-            pygame.Rect(
-                vehicle.x * self.config.cell_width,
-                vehicle.y * self.config.cell_height,
-                self.config.cell_width,
-                self.config.cell_height,
+        user = next(
+            (
+                user
+                for user in self.environment.users
+                if user.assigned_vehicle == vehicle
             ),
+            None,
         )
+        if user:
+            pygame.draw.rect(
+                self.screen,
+                color,
+                pygame.Rect(
+                    user.x * self.config.cell_width,
+                    user.y * self.config.cell_height,
+                    self.config.cell_width,
+                    self.config.cell_height,
+                ),
+            )
+        else:
+            pygame.draw.rect(
+                self.screen,
+                color,
+                pygame.Rect(
+                    vehicle.x * self.config.cell_width,
+                    vehicle.y * self.config.cell_height,
+                    self.config.cell_width,
+                    self.config.cell_height,
+                ),
+            )
 
     def draw_user(self, user: User):
         pygame.draw.circle(
@@ -555,7 +575,7 @@ async def run_simulation(
 
     # Initialize pygame
     pygame.init()
-    pygame.display.set_caption("MAS - Project 3 (Nikethan & Luca)")
+    pygame.display.set_caption("MAS Simulation for Shared Micromobility")
     screen = pygame.display.set_mode((config.width, config.height))
     clock = pygame.time.Clock()
 
