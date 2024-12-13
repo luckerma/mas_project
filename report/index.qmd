@@ -10,11 +10,11 @@ authors:
         country: "Germany"
     corresponding: true
     orcid: "0009-0005-2957-6331"
-  - name: "Nikethan"
+  - name: "Nikethan Nimalakumaran"
     affiliation:
       - id: UGE
-        name: "Gustave Eiffel University"
-        city: "Paris"
+        name: "Université Gustave Eiffel"
+        city: "Champs-sur-Marne"
         country: "France"
     corresponding: true
 number-sections: true
