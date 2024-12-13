@@ -19,6 +19,7 @@ authors:
     corresponding: true
 number-sections: true
 link-citations: true
+notebook-links: false
 execute: 
   eval: true
   echo: false
@@ -155,7 +156,7 @@ python main.py
 The simulation metrics are stored as CSV files in the `metrics/` directory for each run and are named with a timestamp. See `2024-12-07_02-12-58.csv` for an example:
 
 ```csv
-frame,users,vehicles,average_user_wait_time,vehicle_availability,vehicles_depleted,vehicle_utilization
+f,u,v,a_u_w_t,v_a,v_d,v_u
 0,1,10,1.0,100.0,0,0.0
 1,2,10,1.0,90.0,0,10.0
 2,3,10,1.33,90.0,0,10.0
@@ -178,11 +179,14 @@ A snippet of the GitHub Actions workflow file (`action.yml`) is shown below:
 ```yaml
 - name: Python
   run: |
-    python -m pip install -r requirements.txt
-    python -m pygbag --build $GITHUB_WORKSPACE/main.py
+    python -m pip install -r \
+      requirements.txt
+    python -m pygbag --build \
+      $GITHUB_WORKSPACE/main.py
 
 - name: Deploy to GitHub Pages
-  uses: JamesIves/github-pages-deploy-action@v4
+  uses: JamesIves/\
+    github-pages-deploy-action
   with:
     token: ${{ secrets.PA_TOKEN }}
     branch: gh-pages
@@ -193,21 +197,16 @@ Using the `github-pages-deploy-action` [@ives2024], the built web application is
 
 # Results
 
-The simulation results provide insight into the performance of shared micromobility systems under different scenarios. The following figures illustrate the average user wait time, vehicle availability and vehicle utilization over time for four different vehicle initialization strategies: random, center, uniform and high-demand. Each strategy was run three times and the results were aggregated to provide a more robust analysis. All other parameters were held constant across runs, as shown in @tbl-parameters:
+The simulation results provide insight into the performance of shared micromobility systems under different scenarios. The following figures illustrate the average user wait time, vehicle availability and vehicle utilization over time for four different vehicle initialization strategies: random, center, uniform and high-demand. Each strategy was run three times and the results were aggregated to provide a more robust analysis. All other parameters were held constant across runs, as shown in the following configuration:
 
-| Parameter               | Value                                 |
-|-------------------------|---------------------------------------|
-| Grid Size               | 12x12 Cells                           |
-| Total Vehicles          | 10                                    |
-| Battery Depletion Rate  | 20                                    |
-| Recharge Time           | 30                                    |
-| Max Users               | 10                                    |
-| User Probability        | 0.2                                   |
-| FPS                     | 30                                    |
-| High-Demand Zone        | True                                  |
-| Vehicle Initialization  | Random, Center, Uniform, High-Demand  |
-
-: Simulation parameters for the four vehicle initialization strategies. {#tbl-parameters}
+- **Grid Size**: 12x12 Cells
+- **Total Vehicles**: 10
+- **Battery Depletion Rate**: 20
+- **Recharge Time**: 30
+- **User Probability**: 0.2
+- **FPS**: 30
+- **High-Demand Zone**: True
+- **Vehicle Initialization**: Random, Center, Uniform, High-Demand
 
 To simplify the visualization and to better highlight early system behavior, the data for the first 300 frames has been aggregated into a 10 second interval. The initial phase of the simulation is most relevant for understanding the impact of different vehicle initialization methods on system performance under initial conditions.
 
